@@ -10,6 +10,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "Chip8": () => (/* binding */ Chip8)
 /* harmony export */ });
 /* harmony import */ var _Display__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(2);
+/* harmony import */ var _Memory__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(4);
+
 
 
 class Chip8 {
@@ -18,6 +20,11 @@ class Chip8 {
     constructor() {
         console.log('Created new Chip-8')
         this.display = new _Display__WEBPACK_IMPORTED_MODULE_0__.Display();
+
+        // Normally would have a bus to connect memory hardware to chip-8
+        // since this architecture is more simple we can connect memory directly 
+        // to the chip 8 class:
+        this.memory = new _Memory__WEBPACK_IMPORTED_MODULE_1__.Memory();
     }
 
 }
@@ -35,6 +42,7 @@ __webpack_require__.r(__webpack_exports__);
 
 class Display {
     constructor() {
+        console.log('Created Display')
         this.screen = document.querySelector('canvas');
         this.screen.width = _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_WIDTH * _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_MULTIPLIER;
         this.screen.height = _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_HEIGHT * _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_MULTIPLIER;
@@ -50,22 +58,23 @@ class Display {
     // straight across screen - so to reset we push an empty array for each line
     // and for each pixel in the line we set to zero
     reset() {
-        for(let i=0; i < this.screen.height; i++) {
+        for(let i=0; i < _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_HEIGHT; i++) {
             this.frameBuffer.push([]);
-            for(let j=0; j <this.screen.width; j++) {
-                this.frameBuffer[i].push(0)
+            for(let j=0; j < _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_WIDTH; j++) {
+                this.frameBuffer[i].push(1)
             }
         }
         this.context.fillRect(0,0, this.screen.width, this.screen.height);
+        this.drawBuffer();
     }
 
     // loops through screen lines and pixels and draws pixels on screen 
     // by grabbing x values (w for width) and y values (h for height) and setting them a color value
     drawBuffer() {
-        for(let h=0; h < this.screen.height; h++) {
+        for(let h=0; h < _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_HEIGHT; h++) {
             this.frameBuffer.push([]);
-            for(let w=0; w <this.screen.width; w++) {
-                this.drawPixel(h, w, )
+            for(let w=0; w <_constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_WIDTH; w++) {
+                this.drawPixel(h, w, this.frameBuffer[h][w]);
             }
         }
     }
@@ -78,7 +87,12 @@ class Display {
         } else {
             this.context.fillStyle = _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.BG_COLOR
         }
-        this.fillRect(w, h, w+1, h+1)
+        this.context.fillRect(
+            w * _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_MULTIPLIER, 
+            h*_constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_MULTIPLIER,
+            _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_MULTIPLIER, 
+            _constants_displayConstants__WEBPACK_IMPORTED_MODULE_0__.DISPLAY_MULTIPLIER    
+        );
     }
 }
 
@@ -99,6 +113,54 @@ const DISPLAY_HEIGHT = 22;
 const DISPLAY_MULTIPLIER = 10;
 const BG_COLOR = "#000";
 const COLOR = "#3f6";
+
+/***/ }),
+/* 4 */
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "Memory": () => (/* binding */ Memory)
+/* harmony export */ });
+/* harmony import */ var _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(5);
+
+
+class Memory {
+    constructor() {
+        this.memory = new Uint8Array(_constants_memoryConstants__WEBPACK_IMPORTED_MODULE_0__.MEMORY_SIZE) //creates an array of bytes the size of our 'MEMORY_SIZE' constant
+        this.reset()
+    }
+    // another reset function - will fill memory with 0 values
+    reset() {
+        this.memory.fill(0);
+    }
+
+    setMemory(index, value) {
+        this.assertMemory(index);
+        this.memory[index] = value;
+    }
+
+    getMemory(index) {
+        this.assertMemory(index);
+        return this.memory[index];
+    }
+
+    assertMemory(index) {
+        console.assert(index >= 0 && index < _constants_memoryConstants__WEBPACK_IMPORTED_MODULE_0__.MEMORY_SIZE, `Error trying to access memory at index ${index}`);
+    }
+}
+
+/***/ }),
+/* 5 */
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "MEMORY_SIZE": () => (/* binding */ MEMORY_SIZE),
+/* harmony export */   "LOAD_PROGRAM_ADDRESS": () => (/* binding */ LOAD_PROGRAM_ADDRESS)
+/* harmony export */ });
+const MEMORY_SIZE = 4095;
+const LOAD_PROGRAM_ADDRESS = 0x200;
 
 /***/ })
 /******/ 	]);
@@ -166,6 +228,9 @@ __webpack_require__.r(__webpack_exports__);
 
 //creating new instance of Chip8 class
 const chip8 = new _Chip8__WEBPACK_IMPORTED_MODULE_0__.Chip8();
+chip8.memory.setMemory(0x05, 0x1a);
+const result = chip8.memory.getMemory(0x05)
+console.log(result)
 })();
 
 /******/ })()
